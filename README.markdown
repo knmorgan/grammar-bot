@@ -17,7 +17,7 @@ Open replacements.json and follow the template to insert new replacements. As of
 you can insert either a grammatical error or a spelling error.
 
 ## Run Grammar Bot ##
-python grammar-bot.py
+	python grammar-bot.py
 
 
 ### Brought to you by ###
