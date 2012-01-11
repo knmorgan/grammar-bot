@@ -1,2 +1,2 @@
 # Just getting started #
-By Rishi Ishairzay and Kyle Morgan
+By Kyle Morgan and Rishi Ishairzay 
