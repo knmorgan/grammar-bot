@@ -1,4 +1,8 @@
-import json, urllib2
+import json, pycurl
 
-username = "ShouldHave1"
-password = "should.have"
+# Load in the credentials config file into credentials dictionary
+config_file = open("credentials.json", "r")
+config = ""
+for line in config_file: config += line
+credentials = json.loads(config)
+
