@@ -33,7 +33,8 @@ def file_to_object(file_path):
 	return json.loads(str)
 
 # Load in the credentials config file into credentials dictionary
-creds = file_to_object("credentials.local.json")
+# creds = file_to_object("credentials.local.json")
+creds = file_to_object("credentials.json")
 # Load in the list of corrections
 corrections = file_to_object("replacements.json")
 
