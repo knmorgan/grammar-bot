@@ -77,8 +77,8 @@ while 1:
 		results = api.GetSearch(term=query, per_page=15)
 		for tweet in reversed(results):
 			# print tweet.text
-			# if tweet.created_at_in_seconds < start_time:
-			#	continue
+			if tweet.created_at_in_seconds < start_time:
+				continue
 
 			# Find the correction object {find:replace:}
 			entry = find_correction(tweet.text, corrections)
@@ -103,7 +103,7 @@ while 1:
 	# Loop through all the pending tweets and post them as status updates
 	while len(pending_tweets):
 		tweet = pending_tweets.pop()
-		# api.PostUpdate(status=tweet)
+		api.PostUpdate(status=tweet)
 		print tweet
 		api_calls += 1
 
