@@ -1,9 +1,0 @@
-1 API calls made (99 calls remaining, 1.0 calls per loop)
-Sleeping for 36.3571297569 seconds (0.999821068313 hours left)
-Traceback (most recent call last):
-  File "grammar-bot.py", line 106, in <module>
-    api.PostUpdate(status=tweet)
-  File "build/bdist.macosx-10.7-intel/egg/twitter.py", line 2766, in PostUpdate
-  File "build/bdist.macosx-10.7-intel/egg/twitter.py", line 3668, in _ParseAndCheckTwitter
-  File "build/bdist.macosx-10.7-intel/egg/twitter.py", line 3691, in _CheckForTwitterError
-twitter.TwitterError: Could not authenticate you.
