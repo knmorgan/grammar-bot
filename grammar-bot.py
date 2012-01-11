@@ -45,7 +45,6 @@ api = twitter.Api(
 	access_token_key = creds.get('access_token_key'),
 	access_token_secret = creds.get('access_token_secret')
 )
-api.SetXTwitterHeaders("FTFY_Script", "http://ishairzay.com", "0.9")
 
 keys = corrections.keys()
 last_times = {}
@@ -78,8 +77,8 @@ while 1:
 		results = api.GetSearch(term=query, per_page=15)
 		for tweet in reversed(results):
 			# print tweet.text
-			if tweet.created_at_in_seconds < start_time:
-				continue
+			# if tweet.created_at_in_seconds < start_time:
+			#	continue
 
 			# Find the correction object {find:replace:}
 			entry = find_correction(tweet.text, corrections)
@@ -90,7 +89,15 @@ while 1:
 			# If this entry is after the last one that we processed with this key
 			# then we'll use it, otherwise skip it
 			if tweet.created_at_in_seconds > last_times[entry['find']]:
-				pending_tweets.append("@" + tweet.user.screen_name + " Bro, I think you meant \"" + entry["replace"] + "\"")
+				text = entry["replace"]["text"]
+				type = entry["replace"]["type"]
+				new_tweet = "@" + tweet.user.screen_name + " Bro, I think you meant \""
+				new_tweet += text + "\""
+				if type == "spelling":
+					new_tweet +=  " because \"" + entry["find"] + "\" isn't a word."
+				elif type == "grammar":
+					new_tweet += " because \"" + entry["find"] + "\" is gramatically incorrect."
+				pending_tweets.append(new_tweet)
 				last_times[entry["find"]] = tweet.created_at_in_seconds
 	
 	# Loop through all the pending tweets and post them as status updates
