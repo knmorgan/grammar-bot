@@ -43,24 +43,27 @@ api = twitter.Api(
 	access_token_key = creds.get('access_token_key'),
 	access_token_secret = creds.get('access_token_secret')
 )
-
+api.SetXTwitterHeaders("FTFY_Script", "http://ishairzay.com", "0.9")
 
 keys = corrections.keys()
 last_times = {}
 pending_tweets = []
 
-rate_limit = api.GetRateLimitStatus()
-reset_time = rate_limit["reset_time_in_seconds"]
-api_calls = HOURLY_LIMIT - rate_limit["remaining_hits"]
+reset_time = 0
+api_calls = 0
 loops = 0
 
-print rate_limit
-sys.exit()
+
 
 # Start the loop that looks for status updates
-while api_calls <= 2:
-	# The number of API calls in this loop
-	api_calls_loop = 0
+while 1:
+	# We've past our reset time, restart the rate limiting!
+	if reset_time < time.time():
+		rate_limit = api.GetRateLimitStatus()
+		reset_time = rate_limit["reset_time_in_seconds"]
+		api_calls = HOURLY_LIMIT - rate_limit["remaining_hits"]
+		print "Reset time is " + time.ctime(reset_time) + " with " + str(api_calls) + " api calls made"
+
 	# Search for tweets {TERMS_PER_SEARCH} tweets at a time
 	for i in range(0, int(1 + len(keys) / TERMS_PER_SEARCH)):
 		# Get the begin and end range for the dictionary
@@ -85,24 +88,19 @@ while api_calls <= 2:
 	# Loop through all the pending tweets and post them as status updates
 	while len(pending_tweets):
 		tweet = pending_tweets.pop()
-		api.PostUpdate(status=tweet)
+		# api.PostUpdate(status=tweet)
+		print tweet
 		api_calls += 1
 
-	# We've past our reset time, restart the rate limiting!
-	if reset_time < time.time():
-		rate_limit = api.GetRateLimitStatus()
-		reset_time = rate_limit["reset_time_in_seconds"]
-		api_calls = HOURLY_LIMIT - rate_limit["remaining_hits"]
-
 	loops += 1
-	
+
 	# Determine the amount of time we need to sleep dynamically, based
 	# on the average amount of api calls made per loop and the amount
 	# of api calls before we get a limit reset
 	time_left = reset_time - time.time()
-	time.sleep(time_left / (api_calls / loops))
-
-
+	time_to_sleep = time_left / (api_calls / loops)
+	print "Sleeping for " + str(time_to_sleep) + " seconds (" + str(time_left / 60 / 60) + " hours left)"
+	time.sleep(time_to_sleep)
 
 
 
