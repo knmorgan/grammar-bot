@@ -5,7 +5,7 @@
 ### Dependencies ###
 External modules needed are twitter and json. Install them using
 
-	easy_install twitter
+	easy_install python-twitter
 	easy_install json
 
 ### Credentials ###

@@ -33,8 +33,8 @@ def file_to_object(file_path):
 	return json.loads(str)
 
 # Load in the credentials config file into credentials dictionary
-# creds = file_to_object("credentials.local.json")
-creds = file_to_object("credentials.json")
+creds = file_to_object("credentials.local.json")
+# creds = file_to_object("credentials.json")
 # Load in the list of corrections
 corrections = file_to_object("replacements.json")
 
@@ -97,13 +97,16 @@ while 1:
 					new_tweet +=  " because \"" + entry["find"] + "\" isn't a word."
 				elif type == "grammar":
 					new_tweet += " because \"" + entry["find"] + "\" is gramatically incorrect."
-				pending_tweets.append(new_tweet)
+				pending_tweets.append({
+					"id": tweet.id,
+					"message": new_tweet
+				})
 				last_times[entry["find"]] = tweet.created_at_in_seconds
 	
 	# Loop through all the pending tweets and post them as status updates
 	while len(pending_tweets):
 		tweet = pending_tweets.pop()
-		api.PostUpdate(status=tweet)
+		api.PostUpdate(status=tweet["message"], in_reply_to_status_id=tweet["id"])
 		print tweet
 		api_calls += 1
 
