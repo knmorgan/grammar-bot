@@ -1,7 +1,8 @@
 import json, twitter, time, math, sys, string
 
 TERMS_PER_SEARCH = 10
-HOURLY_LIMIT = 350
+HOURLY_LIMIT = 100
+MIN_SLEEP_TIME = 10
 
 # Take a string and find the item in dictionary
 def find_correction(str, dictionary):
@@ -49,20 +50,22 @@ keys = corrections.keys()
 last_times = {}
 pending_tweets = []
 
-reset_time = 0
-api_calls = 0
+rate_start_time = 0
+rate_end_time = 0
 loops = 0
+api_calls = 0
+
+start_time = time.time()
 
 
 
 # Start the loop that looks for status updates
 while 1:
 	# We've past our reset time, restart the rate limiting!
-	if reset_time < time.time():
-		rate_limit = api.GetRateLimitStatus()
-		reset_time = rate_limit["reset_time_in_seconds"]
-		api_calls = HOURLY_LIMIT - rate_limit["remaining_hits"]
-		print "Reset time is " + time.ctime(reset_time) + " with " + str(api_calls) + " api calls made"
+	if rate_end_time < time.time():
+		rate_start_time = time.time()
+		rate_end_time = rate_start_time + (60 * 60)
+		api_calls = 1
 
 	# Search for tweets {TERMS_PER_SEARCH} tweets at a time
 	for i in range(0, int(1 + len(keys) / TERMS_PER_SEARCH)):
@@ -72,7 +75,11 @@ while 1:
 		query = quote_join( keys[begin : end], " OR ")
 		# Place the API Call
 		results = api.GetSearch(term=query, per_page=15)
-		for tweet in results:
+		for tweet in reversed(results):
+			# print tweet.text
+			if tweet.created_at_in_seconds < start_time:
+				continue
+
 			# Find the correction object {find:replace:}
 			entry = find_correction(tweet.text, corrections)
 			if not entry:
@@ -97,8 +104,18 @@ while 1:
 	# Determine the amount of time we need to sleep dynamically, based
 	# on the average amount of api calls made per loop and the amount
 	# of api calls before we get a limit reset
-	time_left = reset_time - time.time()
-	time_to_sleep = time_left / (api_calls / loops)
+	time_left = rate_end_time - time.time()
+	calls_left = HOURLY_LIMIT - api_calls
+	average_calls_per_loop = (api_calls / float(loops))
+
+	print str(api_calls) + " API calls made (" + str(calls_left) + " calls remaining, " + str(average_calls_per_loop) + " calls per loop)"
+	
+	# Take the maximum of time_to_sleep and MIN_SLEEP_TIME
+	time_to_sleep = time_left * average_calls_per_loop / calls_left
+	if time_to_sleep < MIN_SLEEP_TIME:
+		time_to_sleep = MIN_SLEEP_TIME
+	
+
 	print "Sleeping for " + str(time_to_sleep) + " seconds (" + str(time_left / 60 / 60) + " hours left)"
 	time.sleep(time_to_sleep)
 
