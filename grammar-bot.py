@@ -1,6 +1,12 @@
-import json, twitter, time, math, sys, string, random
+import json, twitter, time, math, sys, string, random, os
 
 SECONDS_BETWEEN_TWEETS = 120
+
+files = {
+	"credentials": "credentials.json",
+	"replacements": "replacements.json",
+	"tweets": "tweets.dat"
+}
 
 # Take a string and find the item in dictionary
 def find_correction(str, dictionary):
@@ -30,18 +36,9 @@ def file_to_object(file_path):
 	for line in file: str += line
 	return json.loads(str)
 
-# Load in the credentials config file into credentials dictionary
-creds = file_to_object("credentials.local.json")
-# creds = file_to_object("credentials.json")
-
-# Load in the list of corrections
-corrections = file_to_object("replacements.json")
 
 # Load the tweet templates
-tweets = []
-file = open("tweets.dat", "r")
-for line in file.readlines():
-	tweets.append(line)
+creds = file_to_object(files["credentials"])
 
 # Create the API object with all the credentials
 api = twitter.Api(
@@ -51,9 +48,30 @@ api = twitter.Api(
 	access_token_secret = creds.get("access_token_secret")
 )
 
-keys = corrections.keys()
+
+tweets = []
+last_modified_time = 0
 
 while 1:
+
+	# Find the time of the most recently modified file
+	modified_time = 0
+	for file_path in files.values():
+		modified_time = max(os.path.getmtime(file_path), modified_time)
+	
+	# Reload all the files if the modified time is after the last time
+	# it was modified
+	if modified_time > last_modified_time:
+		print "Reloading config files"
+		file = open(files["tweets"], "r")
+		for line in file.readlines():
+			tweets.append(line)
+		# Load in the list of corrections
+		corrections = file_to_object(files["replacements"])
+		# Reset the last load time
+		last_modified_time = modified_time
+
+	keys = corrections.keys()
 	start_time = time.time()
 	query = quote_join(keys, " OR ")
 	results = api.GetSearch(term=query, per_page=1)
@@ -70,6 +88,8 @@ while 1:
 	new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
 	new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
 	new_tweet = new_tweet.replace(r"$CORRECTION", text);
+
+	print new_tweet
 
 	api.PostUpdate(status=new_tweet, in_reply_to_status_id=tweet.id)
 
