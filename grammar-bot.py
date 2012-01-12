@@ -45,10 +45,10 @@ for line in file.readlines():
 
 # Create the API object with all the credentials
 api = twitter.Api(
-	consumer_key = creds.get('consumer_key'),
-	consumer_secret = creds.get('consumer_secret'),
-	access_token_key = creds.get('access_token_key'),
-	access_token_secret = creds.get('access_token_secret')
+	consumer_key = creds.get("consumer_key"),
+	consumer_secret = creds.get("consumer_secret"),
+	access_token_key = creds.get("access_token_key"),
+	access_token_secret = creds.get("access_token_secret")
 )
 
 keys = corrections.keys()
@@ -71,7 +71,6 @@ while 1:
 	new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
 	new_tweet = new_tweet.replace(r"$CORRECTION", text);
 
-	print "Making tweet:\n" + new_tweet
 	api.PostUpdate(status=new_tweet, in_reply_to_status_id=tweet.id)
 
 	time_to_sleep = SECONDS_BETWEEN_TWEETS - (time.time() - start_time);
