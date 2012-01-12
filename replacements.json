@@ -2,25 +2,5 @@
 	"should of": {
 		"text": "should have",
 		"type": "grammar"
-	},
-	"would of": {
-		"text": "would have",
-		"type": "grammar"
-	},
-	"could of": {
-		"text": "could have",
-		"type": "grammar"
-	},
-	"wierd": {
-		"text": "weird",
-		"type": "spelling"
-	},
-	"definately": {
-		"text": "definitely",
-		"type": "spelling"
-	},
-	"alot": {
-		"text": "a lot",
-		"type": "spelling"
 	}
 }

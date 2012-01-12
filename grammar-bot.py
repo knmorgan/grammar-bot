@@ -1,8 +1,6 @@
 import json, twitter, time, math, sys, string, random
 
-TERMS_PER_SEARCH = 10
-HOURLY_LIMIT = 40
-MIN_SLEEP_TIME = 10
+SECONDS_BETWEEN_TWEETS = 120
 
 # Take a string and find the item in dictionary
 def find_correction(str, dictionary):
@@ -35,6 +33,7 @@ def file_to_object(file_path):
 # Load in the credentials config file into credentials dictionary
 creds = file_to_object("credentials.local.json")
 # creds = file_to_object("credentials.json")
+
 # Load in the list of corrections
 corrections = file_to_object("replacements.json")
 
@@ -53,15 +52,6 @@ api = twitter.Api(
 )
 
 keys = corrections.keys()
-last_times = {}
-pending_tweets = []
-
-rate_start_time = 0
-rate_end_time = 0
-loops = 0
-api_calls = 0
-
-start_time = time.time()
 
 while 1:
 	start_time = time.time()
@@ -80,87 +70,9 @@ while 1:
 	new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
 	new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
 	new_tweet = new_tweet.replace(r"$CORRECTION", text);
+
 	print "Making tweet:\n" + new_tweet
-	pending_tweets.append({
-		"id": tweet.id,
-		"message": new_tweet
-	})
-	last_times[entry["find"]] = tweet.created_at_in_seconds
+	api.PostUpdate(status=new_tweet, in_reply_to_status_id=tweet.id)
 
-	time_to_sleep = 12 - (time.time() - start_time);
+	time_to_sleep = SECONDS_BETWEEN_TWEETS - (time.time() - start_time);
 	time.sleep(time_to_sleep)
-
-
-
-
-# Start the loop that looks for status updates
-while 1:
-	# We've past our reset time, restart the rate limiting!
-	if rate_end_time < time.time():
-		rate_start_time = time.time()
-		rate_end_time = rate_start_time + (60 * 60)
-		api_calls = 1
-
-	# Search for tweets {TERMS_PER_SEARCH} tweets at a time
-	for i in range(0, int(1 + len(keys) / TERMS_PER_SEARCH)):
-		# Get the begin and end range for the dictionary
-		begin = i * TERMS_PER_SEARCH
-		end = begin + TERMS_PER_SEARCH - 1
-		query = quote_join(keys[begin : end], " OR ")
-		# Place the API Call
-		results = api.GetSearch(term=query, per_page=15)
-		for tweet in reversed(results):
-			# print tweet.text
-			if tweet.created_at_in_seconds < start_time:
-				continue
-
-			# Find the correction object {find:replace:}
-			entry = find_correction(tweet.text, corrections)
-			if not entry:
-				continue
-			if entry['find'] not in last_times:
-				last_times[entry['find']] = 0
-			# If this entry is after the last one that we processed with this key
-			# then we'll use it, otherwise skip it
-			if tweet.created_at_in_seconds > last_times[entry['find']]:
-				text = entry["replace"]["text"]
-				new_tweet = random.choice(tweets);
-				new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
-				new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
-				new_tweet = new_tweet.replace(r"$CORRECTION", text);
-				print "Making tweet:\n" + new_tweet
-				pending_tweets.append({
-					"id": tweet.id,
-					"message": new_tweet
-				})
-				last_times[entry["find"]] = tweet.created_at_in_seconds
-	
-	# Loop through all the pending tweets and post them as status updates
-	while len(pending_tweets):
-		tweet = pending_tweets.pop()
-		api.PostUpdate(status=tweet["message"], in_reply_to_status_id=tweet["id"])
-		print tweet
-		api_calls += 1
-
-	loops += 1
-
-	# Determine the amount of time we need to sleep dynamically, based
-	# on the average amount of api calls made per loop and the amount
-	# of api calls before we get a limit reset
-	time_left = rate_end_time - time.time()
-	calls_left = HOURLY_LIMIT - api_calls
-	average_calls_per_loop = (api_calls / float(loops))
-
-	print str(api_calls) + " API calls made (" + str(calls_left) + " calls remaining, " + str(average_calls_per_loop) + " calls per loop)"
-	
-	# Take the maximum of time_to_sleep and MIN_SLEEP_TIME
-	time_to_sleep = time_left * average_calls_per_loop / calls_left
-	if time_to_sleep < MIN_SLEEP_TIME:
-		time_to_sleep = MIN_SLEEP_TIME
-	
-
-	print "Sleeping for " + str(time_to_sleep) + " seconds (" + str(time_left / 60 / 60) + " hours left)"
-	time.sleep(time_to_sleep)
-
-
-
