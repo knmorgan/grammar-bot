@@ -1,7 +1,7 @@
 import json, twitter, time, math, sys, string, random
 
 TERMS_PER_SEARCH = 10
-HOURLY_LIMIT = 100
+HOURLY_LIMIT = 40
 MIN_SLEEP_TIME = 10
 
 # Take a string and find the item in dictionary
