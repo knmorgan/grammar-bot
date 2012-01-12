@@ -1,4 +1,4 @@
-import json, twitter, time, math, sys, string
+import json, twitter, time, math, sys, string, random
 
 TERMS_PER_SEARCH = 10
 HOURLY_LIMIT = 100
@@ -38,6 +38,11 @@ creds = file_to_object("credentials.local.json")
 # Load in the list of corrections
 corrections = file_to_object("replacements.json")
 
+tweets = []
+file = open("tweets.dat", "r")
+for line in file.readlines():
+	tweets.append(line)
+
 # Create the API object with all the credentials
 api = twitter.Api(
 	consumer_key = creds.get('consumer_key'),
@@ -56,8 +61,6 @@ loops = 0
 api_calls = 0
 
 start_time = time.time()
-
-
 
 # Start the loop that looks for status updates
 while 1:
@@ -90,13 +93,11 @@ while 1:
 			# then we'll use it, otherwise skip it
 			if tweet.created_at_in_seconds > last_times[entry['find']]:
 				text = entry["replace"]["text"]
-				type = entry["replace"]["type"]
-				new_tweet = "@" + tweet.user.screen_name + " Bro, I think you meant \""
-				new_tweet += text + "\""
-				if type == "spelling":
-					new_tweet +=  " because \"" + entry["find"] + "\" isn't a word."
-				elif type == "grammar":
-					new_tweet += " because \"" + entry["find"] + "\" is gramatically incorrect."
+				new_tweet = random.choice(tweets);
+				new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
+				new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
+				new_tweet = new_tweet.replace(r"$CORRECTION", text);
+				print "Making tweet:\n" + new_tweet
 				pending_tweets.append({
 					"id": tweet.id,
 					"message": new_tweet
