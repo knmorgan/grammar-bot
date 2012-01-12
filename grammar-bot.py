@@ -38,6 +38,7 @@ creds = file_to_object("credentials.local.json")
 # Load in the list of corrections
 corrections = file_to_object("replacements.json")
 
+# Load the tweet templates
 tweets = []
 file = open("tweets.dat", "r")
 for line in file.readlines():
@@ -62,6 +63,36 @@ api_calls = 0
 
 start_time = time.time()
 
+while 1:
+	start_time = time.time()
+	query = quote_join(keys, " OR ")
+	results = api.GetSearch(term=query, per_page=1)
+	if len(results) == 0:
+		continue
+	
+	tweet = results[0]
+	entry = find_correction(tweet.text, corrections)
+	if not entry: # should never happen, but whatever
+		continue
+	
+	text = entry["replace"]["text"]
+	new_tweet = random.choice(tweets);
+	new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
+	new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
+	new_tweet = new_tweet.replace(r"$CORRECTION", text);
+	print "Making tweet:\n" + new_tweet
+	pending_tweets.append({
+		"id": tweet.id,
+		"message": new_tweet
+	})
+	last_times[entry["find"]] = tweet.created_at_in_seconds
+
+	time_to_sleep = 12 - (time.time() - start_time);
+	time.sleep(time_to_sleep)
+
+
+
+
 # Start the loop that looks for status updates
 while 1:
 	# We've past our reset time, restart the rate limiting!
@@ -75,7 +106,7 @@ while 1:
 		# Get the begin and end range for the dictionary
 		begin = i * TERMS_PER_SEARCH
 		end = begin + TERMS_PER_SEARCH - 1
-		query = quote_join( keys[begin : end], " OR ")
+		query = quote_join(keys[begin : end], " OR ")
 		# Place the API Call
 		results = api.GetSearch(term=query, per_page=15)
 		for tweet in reversed(results):
