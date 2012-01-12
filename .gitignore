@@ -1,7 +1,11 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 credentials.local.json
 *.swp
 ~*
+=======
+*.local.json
+>>>>>>> 6809a1fd576cff6ed456a58eabefbb6557fc6fd3
 =======
 *.local.json
 >>>>>>> 6809a1fd576cff6ed456a58eabefbb6557fc6fd3
