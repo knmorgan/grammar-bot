@@ -53,45 +53,47 @@ tweets = []
 last_modified_time = 0
 
 while 1:
+	try:
+		# Find the time of the most recently modified file
+		modified_time = 0
+		for file_path in files.values():
+			modified_time = max(os.path.getmtime(file_path), modified_time)
+		
+		# Reload all the files if the modified time is after the last time
+		# it was modified
+		if modified_time > last_modified_time:
+			print "Reloading config files"
+			file = open(files["tweets"], "r")
+			for line in file.readlines():
+				tweets.append(line)
+			# Load in the list of corrections
+			corrections = file_to_object(files["replacements"])
+			# Reset the last load time
+			last_modified_time = modified_time
 
-	# Find the time of the most recently modified file
-	modified_time = 0
-	for file_path in files.values():
-		modified_time = max(os.path.getmtime(file_path), modified_time)
-	
-	# Reload all the files if the modified time is after the last time
-	# it was modified
-	if modified_time > last_modified_time:
-		print "Reloading config files"
-		file = open(files["tweets"], "r")
-		for line in file.readlines():
-			tweets.append(line)
-		# Load in the list of corrections
-		corrections = file_to_object(files["replacements"])
-		# Reset the last load time
-		last_modified_time = modified_time
+		keys = corrections.keys()
+		start_time = time.time()
+		query = quote_join(keys, " OR ")
+		results = api.GetSearch(term=query, per_page=1)
+		if len(results) == 0:
+			continue
+		
+		tweet = results[0]
+		entry = find_correction(tweet.text, corrections)
+		if not entry: # should never happen, but whatever
+			continue
+		
+		text = entry["replace"]["text"]
+		new_tweet = random.choice(tweets);
+		new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
+		new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
+		new_tweet = new_tweet.replace(r"$CORRECTION", text);
 
-	keys = corrections.keys()
-	start_time = time.time()
-	query = quote_join(keys, " OR ")
-	results = api.GetSearch(term=query, per_page=1)
-	if len(results) == 0:
-		continue
-	
-	tweet = results[0]
-	entry = find_correction(tweet.text, corrections)
-	if not entry: # should never happen, but whatever
-		continue
-	
-	text = entry["replace"]["text"]
-	new_tweet = random.choice(tweets);
-	new_tweet = new_tweet.replace(r"$USER", "@" + tweet.user.screen_name);
-	new_tweet = new_tweet.replace(r"$ERROR", entry["find"]);
-	new_tweet = new_tweet.replace(r"$CORRECTION", text);
+		print new_tweet
 
-	print new_tweet
+		api.PostUpdate(status=new_tweet, in_reply_to_status_id=tweet.id)
 
-	api.PostUpdate(status=new_tweet, in_reply_to_status_id=tweet.id)
-
-	time_to_sleep = SECONDS_BETWEEN_TWEETS - (time.time() - start_time);
-	time.sleep(time_to_sleep)
+		time_to_sleep = SECONDS_BETWEEN_TWEETS - (time.time() - start_time);
+		time.sleep(time_to_sleep)
+	except:
+		print "Error: ", sys.exc_info()[0]
