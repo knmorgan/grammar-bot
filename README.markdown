@@ -16,6 +16,11 @@ as well as the user's access token and access secret.
 Open replacements.json and follow the template to insert new replacements. As of now
 you can insert either a grammatical error or a spelling error.
 
+### Tweets ###
+Modify tweets.dat to change the contents of the tweets.  $USER, $CORRECTION, and $ERROR
+will be changed to the appropriate values for each tweet. Tweets are delimited by a new
+line, and tweets will be chosen at random among the list.
+
 ## Run Grammar Bot ##
 	python grammar-bot.py
 
