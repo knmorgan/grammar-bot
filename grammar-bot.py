@@ -3,9 +3,9 @@ import json, twitter, time, math, sys, string, random, os
 SECONDS_BETWEEN_TWEETS = 120
 
 files = {
-	"credentials": "credentials.json",
-	"replacements": "replacements.json",
-	"tweets": "tweets.dat"
+	"credentials": os.path.dirname(os.path.realpath(__file__)) + "/" + "credentials.json",
+	"replacements": os.path.dirname(os.path.realpath(__file__)) + "/" + "replacements.json",
+	"tweets": os.path.dirname(os.path.realpath(__file__)) + "/" + "tweets.dat"
 }
 
 # Take a string and find the item in dictionary

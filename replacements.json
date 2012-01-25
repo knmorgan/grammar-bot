@@ -2,15 +2,5 @@
 	"should of": {
 		"text": "should have",
 		"type": "grammar"
-	},
-
-	"could of": {
-		"text": "could have",
-		"type": "grammar"
-	},
-
-	"would of": {
-		"text": "would have",
-		"type": "grammar"
 	}
 }
