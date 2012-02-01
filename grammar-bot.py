@@ -3,10 +3,13 @@ import json, twitter, time, math, sys, string, random, os
 SECONDS_BETWEEN_TWEETS = 120
 
 files = {
-	"credentials": os.path.dirname(os.path.realpath(__file__)) + "/" + "credentials.json",
-	"replacements": os.path.dirname(os.path.realpath(__file__)) + "/" + "replacements.json",
-	"tweets": os.path.dirname(os.path.realpath(__file__)) + "/" + "tweets.dat"
+	"credentials": os.path.join(os.path.dirname(os.path.realpath(__file__)), "credentials.json"),
+	"replacements": os.path.join(os.path.dirname(os.path.realpath(__file__)), "replacements.json"),
+	"tweets": os.path.join(os.path.dirname(os.path.realpath(__file__)), "tweets.dat"),
 }
+print files["credentials"]
+print files["replacements"]
+print files["tweets"]
 
 # Take a string and find the item in dictionary
 def find_correction(str, dictionary):
